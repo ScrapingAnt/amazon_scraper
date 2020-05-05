@@ -1,3 +1,5 @@
+'use strict';
+
 const got = require('got');
 const fs = require('fs').promises;
 const Json2csvParser = require('json2csv').Parser;

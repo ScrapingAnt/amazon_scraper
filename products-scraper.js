@@ -1,3 +1,5 @@
+'use strict';
+
 const cheerio = require('cheerio');
 const makeRequest = require('./utils').makeRequest;
 const writeDataToCsv = require('./utils').writeDataToCsv;
