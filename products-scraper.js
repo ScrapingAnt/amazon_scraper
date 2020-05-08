@@ -9,7 +9,7 @@ const CONSTANTS = require('./constants');
 
 class ProductsScraper {
 
-    constructor({keyword, number, host, apiKey, save}) {
+    constructor({keyword, number, host, apiKey, save, country}) {
         this.host = `https://${host || CONSTANTS.defaultAmazonUrl}`;
 
         this.alreadyScrappedProducts = [];
@@ -18,16 +18,18 @@ class ProductsScraper {
         this.numberOfProducts = parseInt(number) || CONSTANTS.defaultItemLimit;
         this.currentSearchPage = 1;
         this.saveToFile = save || false;
-        this.continuePaginating = true;
+        this.country = country || 'us';
     }
 
     async startScraping() {
+        this.checkForCountry();
+
         if (this.numberOfProducts > CONSTANTS.limit.product) {
             this.numberOfProducts = CONSTANTS.limit.product;
             console.info(`Setting number to MAXIMUM available (${CONSTANTS.limit.product}) because of exceeding limit`);
         }
 
-        while (this.continuePaginating) {
+        while (true) {
             if (this.alreadyScrappedProducts.length >= this.numberOfProducts) {
                 break;
             }
@@ -38,7 +40,7 @@ class ProductsScraper {
                 this.alreadyScrappedProducts = this.alreadyScrappedProducts.concat(currentPageProducts);
                 this.currentSearchPage++;
             } else {
-                this.continuePaginating = false;
+                break;
             }
         }
 
@@ -51,26 +53,49 @@ class ProductsScraper {
         return this.alreadyScrappedProducts;
     }
 
-    async getCurrentPageData() {
-        let retryCount = 0;
+    checkForCountry() {
+        const supported_countries = [
+            'ae', // United Arab Emirates (the)
+            'br', // Brasilia
+            'cn', // China
+            'de', // Germany
+            'es', // Spain
+            'fr', // France
+            'gb', // United Kingdom (the)
+            'hk', // Hong Kong
+            'in', // India
+            'it', // Italy
+            'il', // Israel
+            'jp', // Japan
+            'nl', // Netherlands (the)
+            'ru', // Russia
+            'sa', // Saudi Arabia
+            'us', // USA
+        ]
 
+        this.country = this.country.toLowerCase();
+
+        if (!supported_countries.includes(this.country)) {
+            throw `Not supported country. Please use one from the following: ${supported_countries.join(", ")}`;
+        }
+    }
+
+    async getCurrentPageData() {
         const queryParams = querystring.encode({
             k: this.keyword,
             page: this.currentSearchPage
         });
 
-        while(retryCount < CONSTANTS.limit.retry) {
+        for (let i = 0; i < CONSTANTS.limit.retry; i++) {
             const pageBody = await makeRequest({
                 url: `${this.host}/s?${queryParams}`,
-                rapidApiKey: this.apiKey
+                rapidApiKey: this.apiKey,
+                country: this.country
             });
 
             const products = Object.values(this.getProducts(pageBody));
-
             if (products.length > 0) {
                 return products;
-            } else {
-                retryCount++;
             }
         }
 
@@ -92,8 +117,14 @@ class ProductsScraper {
             }
             scrapingResult[productList[i].attribs['data-asin']] = {
                 'amazon-id': productList[i].attribs['data-asin'],
+                'title': "",
+                'thumbnail': "",
+                'url': "",
                 'is-discounted': false,
                 'is-sponsored': false,
+                'is-amazon-choice': false,
+                'price': "",
+                'beforeDiscount': "",
                 'reviews-count': 0,
                 'rating': 0,
                 'score': 0,
@@ -108,17 +139,18 @@ class ProductsScraper {
                 const ratingSearch = dom(`div[data-asin=${key}] .a-icon-star-small`)[0];
                 const titleThumbnailSearch = dom(`div[data-asin=${key}] [data-image-source-density="1"]`)[0];
                 const urlSearch = dom(`div[data-asin=${key}] .a-link-normal`);
+                const amazonChoice = dom(`div[data-asin=${key}] span[id="${key}-amazons-choice"]`).text();
 
                 if (priceSearch) {
-                    scrapingResult[key].price = dom(priceSearch.children[0])
-                        .text()
-                        .replace(/[^D+0-9.,]/g, '');
+                    scrapingResult[key].price = dom(priceSearch.children[0]).text().replace(/[^D+0-9.,]/g, '');
+                }
+
+                if (amazonChoice) {
+                    scrapingResult[key]['is-amazon-choice'] = true;
                 }
 
                 if (discountSearch) {
-                    scrapingResult[key].beforeDiscount = dom(discountSearch.children[0])
-                        .text()
-                        .replace(/[^D+0-9.,]/g, '');
+                    scrapingResult[key].beforeDiscount = dom(discountSearch.children[0]).text().replace(/[^D+0-9.,]/g, '');
                     scrapingResult[key]['is-discounted'] = true;
                     let savings = scrapingResult[key].beforeDiscount - scrapingResult[key].price;
                     if (savings <= 0) {

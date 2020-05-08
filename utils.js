@@ -14,7 +14,8 @@ exports.makeRequest = async ({ url, rapidApiKey, country }) => {
             "accept": "application/json"
         },
         json: {
-            url: url
+            url: url,
+            proxy_country: country
         }
     });
 
@@ -23,7 +24,7 @@ exports.makeRequest = async ({ url, rapidApiKey, country }) => {
 
 exports.writeDataToCsv = async (keyword, productsList) => {
     const productsParser = new Json2csvParser({
-        fields: ['title', 'price', 'savings', 'rating', 'reviews-count', 'score', 'url', 'is-sponsored', 'is-discounted', 'beforeDiscount', 'amazon-id', 'thumbnail'],
+        fields: ['title', 'price', 'savings', 'rating', 'reviews-count', 'score', 'url', 'is-sponsored', 'is-amazon-choice', 'is-discounted', 'beforeDiscount', 'amazon-id', 'thumbnail'],
     });
 
     return fs.writeFile(`${keyword}_product_${Date.now()}.csv`, productsParser.parse(productsList));

@@ -15,6 +15,7 @@ require('yargs')
     .usage('Usage: $0 [options]')
     .example(`$0 -s 'baking mat' -k 'rapid_api_key'`)
     .example(`$0 -s 'baking mat' -H 'www.amazon.de' -k 'rapid_api_key'`)
+    .example(`$0 -s 'baking mat' -c 'us' -H 'www.amazon.de' -k 'rapid_api_key'`)
     .command('$0', 'Scrapes for a products with rotatinf proxies from the provided key word', {}, argv => {
         startScraper(argv);
     })
@@ -53,6 +54,12 @@ require('yargs')
             type: 'string',
             describe: 'The regional Amazon host (can be amazon.fr, amazon.co.uk, etc.)',
         },
+        country: {
+            alias: 'c',
+            default: 'us',
+            type: 'string',
+            describe: 'Country of proxies location'
+        }
     })
     .check(argv => {
         if (!argv.apiKey) {
