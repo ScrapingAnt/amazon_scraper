@@ -1,5 +1,5 @@
 {
-  "name": "amazon-proxy-scraper",
+  "name": "@scrapingant/amazon-proxy-scraper",
   "version": "1.0.0",
   "description": "Amazon products scraper by keyword with using ScrapingAnt API",
   "main": "index.js",
@@ -25,5 +25,14 @@
     "got": "^11.1.0",
     "json2csv": "^5.0.1",
     "yargs": "^15.3.1"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ScrapingAnt/amazon_scraper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ScrapingAnt/amazon_scraper/issues"
+  },
+  "homepage": "https://github.com/ScrapingAnt/amazon_scraper#readme"
 }

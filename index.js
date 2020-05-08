@@ -2,4 +2,4 @@
 
 const ProductsScraper = require('./products-scraper')
 
-module.exports = (options) => { return new ProductsScraper(options) }
+module.exports = ProductsScraper
