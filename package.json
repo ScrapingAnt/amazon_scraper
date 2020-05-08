@@ -1,10 +1,10 @@
 {
   "name": "@scrapingant/amazon-proxy-scraper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Amazon products scraper by keyword with using ScrapingAnt API",
   "main": "index.js",
   "bin": {
-    "amazon-products-scraper": "bin/cli.js"
+    "amazon-proxy-scraper": "bin/cli.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

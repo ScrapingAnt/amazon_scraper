@@ -16,7 +16,7 @@ require('yargs')
     .example(`$0 -s 'baking mat' -k 'rapid_api_key'`)
     .example(`$0 -s 'baking mat' -H 'www.amazon.de' -k 'rapid_api_key'`)
     .example(`$0 -s 'baking mat' -c 'us' -H 'www.amazon.de' -k 'rapid_api_key'`)
-    .command('$0', 'Scrapes for a products with rotatinf proxies from the provided key word', {}, argv => {
+    .command('$0', 'Scrapes for a products with rotating proxies from the provided key word', {}, argv => {
         startScraper(argv);
     })
     .options({
