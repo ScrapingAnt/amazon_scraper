@@ -23,11 +23,9 @@ class ProductsScraper {
 
     async startScraping() {
         this.checkForCountry();
-
-        if (this.numberOfProducts > CONSTANTS.limit.product) {
-            this.numberOfProducts = CONSTANTS.limit.product;
-            console.info(`Setting number to MAXIMUM available (${CONSTANTS.limit.product}) because of exceeding limit`);
-        }
+        this.checkForApiKey();
+        this.checkForKeyword();
+        this.checkForProductsNumber();
 
         while (true) {
             if (this.alreadyScrappedProducts.length >= this.numberOfProducts) {
@@ -77,6 +75,25 @@ class ProductsScraper {
 
         if (!supported_countries.includes(this.country)) {
             throw `Not supported country. Please use one from the following: ${supported_countries.join(", ")}`;
+        }
+    }
+
+    checkForApiKey() {
+        if (!this.apiKey) {
+            throw `No RapidAPI apiKey. Please refer to https://rapidapi.com/okami4kak/api/scrapingant for getting yours.`;
+        }
+    }
+
+    checkForKeyword() {
+        if (!this.keyword) {
+            throw `No keyword for search. Please specify it..`;
+        }
+    }
+
+    checkForProductsNumber() {
+        if (this.numberOfProducts > CONSTANTS.limit.product) {
+            this.numberOfProducts = CONSTANTS.limit.product;
+            console.info(`Setting number to MAXIMUM available (${CONSTANTS.limit.product}) because of exceeding limit.`);
         }
     }
 
