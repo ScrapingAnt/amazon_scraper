@@ -148,10 +148,21 @@ Total scraped products count: 10
 ```javascript
 const options = {
     keyword: "keyword to search, string", //Required parameter. Example: "baking mat"
+
     number: 50, //Optional. 10 by default
+
     host: "amazon.fr", //Optional. amazon.com by default.
+
     apiKey: "<apiKey>", //Required parameter. ApiKey for ScrapingAnt API
+
     save: true, //Optional. Defines saving result to CSV. False by default.
+
     country: "us" //Optional. Proxy location country. US by default. Available countries: ae, br, cn, de, es, fr, gb, hk, in, it, il, jp, nl, ru, sa, us
 }
 ```
+
+## License
+
+**MIT**
+
+**Free Software**
