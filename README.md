@@ -55,7 +55,7 @@ Examples:
 Scrape 100 products with the "baking mat" keyword and save everything to a CSV file
 
 ```sh
-$ amazon-proxy-scraper -k 'baking mat' -n 100 --a '<apiKey>'
+$ amazon-proxy-scraper -k 'baking mat' -n 100 -a '<apiKey>'
 ```
 
 **The file will be saved in a folder from which you run the script:
