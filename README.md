@@ -27,10 +27,10 @@ To use this code you need RapidApi key. Just go to <a href="https://rapidapi.com
 
 **Terminal**
 
-```sh
+```
 $ amazon-proxy-scraper --help
 
-Scrapes for a products with rotatinf proxies from the provided key word
+Scrapes for a products with rotating proxies from the provided key word
 
 Options:
   --help, -h     help                                                  [boolean]
