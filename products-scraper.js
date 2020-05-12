@@ -3,13 +3,14 @@
 const cheerio = require('cheerio');
 const makeRequest = require('./utils').makeRequest;
 const writeDataToCsv = require('./utils').writeDataToCsv;
+const cliProgress = require('cli-progress');
 const querystring = require('querystring');
 
 const CONSTANTS = require('./constants');
 
 class ProductsScraper {
 
-    constructor({keyword, number, host, apiKey, save, country}) {
+    constructor({keyword, number, host, apiKey, save, country, showProgress }) {
         this.host = `https://${host || CONSTANTS.defaultAmazonUrl}`;
 
         this.alreadyScrappedProducts = [];
@@ -19,6 +20,9 @@ class ProductsScraper {
         this.currentSearchPage = 1;
         this.saveToFile = save || false;
         this.country = country || 'us';
+        this.progressBar = showProgress ? new cliProgress.SingleBar({
+            format: `Amazon Scraping: ${this.keyword} | {bar} | {percentage}% - {value}/{total} Products || ETA: {eta}s`,
+        }, cliProgress.Presets.shades_classic) : null;
     }
 
     async startScraping() {
@@ -26,6 +30,10 @@ class ProductsScraper {
         this.checkForApiKey();
         this.checkForKeyword();
         this.checkForProductsNumber();
+
+        if (this.progressBar) {
+            this.progressBar.start(this.numberOfProducts, 0);
+        }
 
         while (true) {
             if (this.alreadyScrappedProducts.length >= this.numberOfProducts) {
@@ -36,6 +44,11 @@ class ProductsScraper {
 
             if (currentPageProducts.length > 0) {
                 this.alreadyScrappedProducts = this.alreadyScrappedProducts.concat(currentPageProducts);
+
+                if (this.progressBar) {
+                    this.progressBar.update(this.alreadyScrappedProducts.length);
+                }
+
                 this.currentSearchPage++;
             } else {
                 break;
@@ -44,6 +57,10 @@ class ProductsScraper {
 
         if (this.saveToFile && this.alreadyScrappedProducts.length > 0) {
             await writeDataToCsv(this.keyword.replace(/\s/g, "_"), this.alreadyScrappedProducts);
+        }
+
+        if (this.progressBar) {
+            this.progressBar.stop();
         }
 
         console.log(`Total scraped products count: ${this.alreadyScrappedProducts.length}`);
