@@ -5,7 +5,7 @@ const ProductsScraper = require('../products-scraper');
 
 const startScraper = async argv => {
     try {
-        await new ProductsScraper({...argv}).startScraping();
+        await new ProductsScraper({ ...argv, showProgress: true }).startScraping();
     } catch (error) {
         console.log(error);
     }

@@ -157,7 +157,9 @@ const options = {
 
     save: true, //Optional. Defines saving result to CSV. False by default.
 
-    country: "us" //Optional. Proxy location country. US by default. Available countries: ae, br, cn, de, es, fr, gb, hk, in, it, il, jp, nl, ru, sa, us
+    country: "us", //Optional. Proxy location country. US by default. Available countries: ae, br, cn, de, es, fr, gb, hk, in, it, il, jp, nl, ru, sa, us,
+
+    showProgress: true //Optional. Show progress bar to CLI. False by default.
 }
 ```
 
