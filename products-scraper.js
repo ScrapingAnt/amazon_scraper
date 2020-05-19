@@ -3,6 +3,7 @@
 const cheerio = require('cheerio');
 const makeRequest = require('./utils').makeRequest;
 const writeDataToCsv = require('./utils').writeDataToCsv;
+const writeDataToXls = require('./utils').writeDataToXls;
 const cliProgress = require('cli-progress');
 const querystring = require('querystring');
 
@@ -10,12 +11,13 @@ const CONSTANTS = require('./constants');
 
 class ProductsScraper {
 
-    constructor({keyword, number, host, apiKey, save, country, showProgress }) {
+    constructor({keyword, number, host, apiKey, save, country, fileType, showProgress }) {
         this.host = `https://${host || CONSTANTS.defaultAmazonUrl}`;
 
         this.alreadyScrappedProducts = [];
         this.apiKey = apiKey;
         this.keyword = keyword;
+        this.fileType = fileType;
         this.numberOfProducts = parseInt(number) || CONSTANTS.defaultItemLimit;
         this.currentSearchPage = 1;
         this.saveToFile = save || false;
@@ -29,6 +31,7 @@ class ProductsScraper {
         this.checkForCountry();
         this.checkForApiKey();
         this.checkForKeyword();
+        this.checkForFileType();
         this.checkForProductsNumber();
 
         if (this.progressBar) {
@@ -55,9 +58,7 @@ class ProductsScraper {
             }
         }
 
-        if (this.saveToFile && this.alreadyScrappedProducts.length > 0) {
-            await writeDataToCsv(this.keyword.replace(/\s/g, "_"), this.alreadyScrappedProducts);
-        }
+        await this.checkAndSaveToFile();
 
         if (this.progressBar) {
             this.progressBar.stop();
@@ -69,29 +70,10 @@ class ProductsScraper {
     }
 
     checkForCountry() {
-        const supported_countries = [
-            'ae', // United Arab Emirates (the)
-            'br', // Brasilia
-            'cn', // China
-            'de', // Germany
-            'es', // Spain
-            'fr', // France
-            'gb', // United Kingdom (the)
-            'hk', // Hong Kong
-            'in', // India
-            'it', // Italy
-            'il', // Israel
-            'jp', // Japan
-            'nl', // Netherlands (the)
-            'ru', // Russia
-            'sa', // Saudi Arabia
-            'us', // USA
-        ]
-
         this.country = this.country.toLowerCase();
 
-        if (!supported_countries.includes(this.country)) {
-            throw `Not supported country. Please use one from the following: ${supported_countries.join(", ")}`;
+        if (!CONSTANTS.supported_countries.includes(this.country)) {
+            throw `Not supported country. Please use one from the following: ${CONSTANTS.supported_countries.join(", ")}`;
         }
     }
 
@@ -107,10 +89,36 @@ class ProductsScraper {
         }
     }
 
+    checkForFileType() {
+        if (this.fileType) {
+            this.saveToFile = true;
+        }
+
+        this.fileType = this.fileType.toLowerCase();
+
+        if (!Object.values(CONSTANTS.supported_filetypes).includes(this.fileType)) {
+            throw `Not supported file type. Please use one from the following: ${Object.values(CONSTANTS.supported_filetypes).join(", ")}`;
+        }
+    }
+
     checkForProductsNumber() {
         if (this.numberOfProducts > CONSTANTS.limit.product) {
             this.numberOfProducts = CONSTANTS.limit.product;
             console.info(`Setting number to MAXIMUM available (${CONSTANTS.limit.product}) because of exceeding limit.`);
+        }
+    }
+
+    async checkAndSaveToFile() {
+        if (this.saveToFile && this.alreadyScrappedProducts.length > 0) {
+            const preparedKeyword = this.keyword.replace(/\s/g, "_");
+
+            if (this.fileType === CONSTANTS.supported_filetypes.csv) {
+                await writeDataToCsv(preparedKeyword, this.alreadyScrappedProducts);
+            }
+
+            if (this.fileType === CONSTANTS.supported_filetypes.xls) {
+                await writeDataToXls(preparedKeyword, this.alreadyScrappedProducts);
+            }
         }
     }
 
@@ -206,7 +214,7 @@ class ProductsScraper {
                     scrapingResult[key].thumbnail = titleThumbnailSearch.attribs.src;
                 }
 
-                if (urlSearch) {
+                if (urlSearch && Array.isArray(urlSearch)) {
                     let url = urlSearch[0].attribs.href;
                     if (url.indexOf('/gcx/-/') > -1) {
                         url = urlSearch[1].attribs.href;

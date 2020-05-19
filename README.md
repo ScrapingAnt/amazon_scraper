@@ -5,9 +5,9 @@ The useful tool to scrape products information from Amazon via ScrapingAnt API.
 ## Features
 
 -   **Scrape products** from Amazon search result: amazon ID, rating, number of reviews, price, title, url, sponsored or not, discounted or not, featured by Amazon choice or not.
--   Result can be saved to a CSV file.
+-   Result can be saved to a CSV or Excel file.
 -   You can scrape up to **500 products**
--   You will not be banned by Amazon because of using proxies out of the box.
+-   You will **not** be banned by Amazon because of using proxies out of the box.
 
 ## Installation
 
@@ -33,16 +33,17 @@ $ amazon-proxy-scraper --help
 Scrapes for a products with rotating proxies from the provided key word
 
 Options:
-  --help, -h     help                                                  [boolean]
-  --version      Show version number                                   [boolean]
-  --keyword, -k  Amazon search keyword ex. 'baking mat'   [string] [default: ""]
-  --apiKey, -a   RapidAPI key for ScrapingAnt API         [string] [default: ""]
-  --number, -n   Number of products to scrape. Maximum 500 products
+  --help, -h      help                                                 [boolean]
+  --version       Show version number                                  [boolean]
+  --keyword, -k   Amazon search keyword ex. 'baking mat'  [string] [default: ""]
+  --apiKey, -a    RapidAPI key for ScrapingAnt API        [string] [default: ""]
+  --number, -n    Number of products to scrape. Maximum 500 products
                                                           [number] [default: 10]
-  --save, -s     Save to a CSV file?                   [boolean] [default: true]
-  --host, -H     The regional Amazon host (can be amazon.fr, amazon.co.uk, etc.)
-                                                [string] [default: "amazon.com"]
-  --country, -c  Country of proxies location            [string] [default: "us"]
+  --save, -s      Save to a file?                      [boolean] [default: true]
+  --fileType, -t  File type to save: can be either csv or xls.  [default: "csv"]
+  --host, -H      The regional Amazon host (can be amazon.fr, amazon.co.uk,
+                  etc.)                         [string] [default: "amazon.com"]
+  --country, -c   Country of proxies location           [string] [default: "us"]
 
 
 Examples:
@@ -60,6 +61,17 @@ $ amazon-proxy-scraper -k 'baking mat' -n 100 -a '<apiKey>'
 
 **The file will be saved in a folder from which you run the script:
 baking_mat_product_1527946544582.csv**
+
+**Example 2**
+
+Scrape 200 products with the "iphone" keyword and save everything to Excel file
+
+```sh
+$ amazon-proxy-scraper -k 'iphone' -t xls -n 200 -a '<apiKey>'
+```
+
+**The file will be saved in a folder from which you run the script:
+iphone_product_1557946545582.xls**
 
 # Module
 
@@ -158,6 +170,8 @@ const options = {
     save: true, //Optional. Defines saving result to CSV. False by default.
 
     country: "us", //Optional. Proxy location country. US by default. Available countries: ae, br, cn, de, es, fr, gb, hk, in, it, il, jp, nl, ru, sa, us,
+
+    fileType: 'xls', //Optional. If specified it overrides save option to true.
 
     showProgress: true //Optional. Show progress bar to CLI. False by default.
 }
