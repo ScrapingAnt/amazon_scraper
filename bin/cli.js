@@ -46,7 +46,12 @@ require('yargs')
             alias: 's',
             default: true,
             type: 'boolean',
-            describe: 'Save to a CSV file?',
+            describe: 'Save to a file?',
+        },
+        fileType: {
+            alias: 't',
+            default: 'csv',
+            describe: "File type to save: can be either csv or xls."
         },
         host: {
             alias: 'H',

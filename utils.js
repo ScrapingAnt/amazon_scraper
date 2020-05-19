@@ -3,6 +3,7 @@
 const got = require('got');
 const fs = require('fs').promises;
 const Json2csvParser = require('json2csv').Parser;
+const json2xls = require('json2xls');
 
 exports.makeRequest = async ({ url, rapidApiKey, country }) => {
     const request = await got.post('https://scrapingant.p.rapidapi.com/post', {
@@ -29,3 +30,6 @@ exports.writeDataToCsv = async (keyword, productsList) => {
 
     return fs.writeFile(`${keyword}_product_${Date.now()}.csv`, productsParser.parse(productsList));
 }
+
+exports.writeDataToXls = async (keyword, productsList) =>
+     fs.writeFile(`${keyword}_product_${Date.now()}.xls`, json2xls(productsList), 'binary');
