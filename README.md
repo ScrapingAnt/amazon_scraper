@@ -21,7 +21,7 @@ $ npm i -g @scrapingant/amazon-proxy-scraper
 
 This library depends on rotating proxies scraping API - ScrapingAnt. It has a free plan.
 
-To use this code you need RapidApi key. Just go to <a href="https://rapidapi.com/okami4kak/api/scrapingant">ScrapingAnt page on RapidAPI</a>, and click "Subscribe to Test" button. After that you have to select plan(there is a free one with 100 requests included). After that you can find you api key in "X-RapidAPI-Key" field on <a href="https://rapidapi.com/okami4kak/api/scrapingant/endpoints">endpoints</a> page.
+To use this code you need RapidApi key. Just go to <a href="https://rapidapi.com/okami4kak/api/scrapingant">ScrapingAnt page on RapidAPI</a>, and click "Subscribe to Test" button. After that you have to select plan(there is a free one with 500 requests included). After that you can find you api key in "X-RapidAPI-Key" field on <a href="https://rapidapi.com/okami4kak/api/scrapingant/endpoints">endpoints</a> page.
 
 ## USAGE
 
