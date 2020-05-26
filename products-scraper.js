@@ -14,7 +14,7 @@ class ProductsScraper {
     constructor({keyword, number, host, apiKey, save, country, fileType, showProgress }) {
         this.host = `https://${host || CONSTANTS.defaultAmazonUrl}`;
 
-        this.alreadyScrappedProducts = [];
+        this.alreadyScrappedProducts = {};
         this.apiKey = apiKey;
         this.keyword = keyword;
         this.fileType = fileType;
@@ -25,6 +25,7 @@ class ProductsScraper {
         this.progressBar = showProgress ? new cliProgress.SingleBar({
             format: `Amazon Scraping: ${this.keyword} | {bar} | {percentage}% - {value}/{total} Products || ETA: {eta}s`,
         }, cliProgress.Presets.shades_classic) : null;
+        this.productsPromises = [];
     }
 
     async startScraping() {
@@ -39,18 +40,17 @@ class ProductsScraper {
         }
 
         while (true) {
-            if (this.alreadyScrappedProducts.length >= this.numberOfProducts) {
+            if (Object.keys(this.alreadyScrappedProducts).length >= this.numberOfProducts) {
                 break;
             }
 
             const currentPageProducts = await this.getCurrentPageData();
+            const productIds = Object.keys(currentPageProducts);
 
-            if (currentPageProducts.length > 0) {
-                this.alreadyScrappedProducts = this.alreadyScrappedProducts.concat(currentPageProducts);
+            if (productIds.length > 0) {
+                this.alreadyScrappedProducts = Object.assign(currentPageProducts, this.alreadyScrappedProducts);
 
-                if (this.progressBar) {
-                    this.progressBar.update(this.alreadyScrappedProducts.length);
-                }
+                this.productsPromises = this.productsPromises.concat(productIds.map(this.getProductPageData.bind(this)))
 
                 this.currentSearchPage++;
             } else {
@@ -58,15 +58,18 @@ class ProductsScraper {
             }
         }
 
+        //Waiting for all product promises completion
+        await Promise.all(this.productsPromises)
+
         await this.checkAndSaveToFile();
 
         if (this.progressBar) {
             this.progressBar.stop();
         }
 
-        console.log(`Total scraped products count: ${this.alreadyScrappedProducts.length}`);
+        console.log(`Total scraped products count: ${Object.keys(this.alreadyScrappedProducts).length}`);
 
-        return this.alreadyScrappedProducts;
+        return Object.values(this.alreadyScrappedProducts);
     }
 
     checkForCountry() {
@@ -92,12 +95,11 @@ class ProductsScraper {
     checkForFileType() {
         if (this.fileType) {
             this.saveToFile = true;
-        }
+            this.fileType = this.fileType.toLowerCase();
 
-        this.fileType = this.fileType.toLowerCase();
-
-        if (!Object.values(CONSTANTS.supported_filetypes).includes(this.fileType)) {
-            throw `Not supported file type. Please use one from the following: ${Object.values(CONSTANTS.supported_filetypes).join(", ")}`;
+            if (!Object.values(CONSTANTS.supported_filetypes).includes(this.fileType)) {
+                throw `Not supported file type. Please use one from the following: ${Object.values(CONSTANTS.supported_filetypes).join(", ")}`;
+            }
         }
     }
 
@@ -109,15 +111,15 @@ class ProductsScraper {
     }
 
     async checkAndSaveToFile() {
-        if (this.saveToFile && this.alreadyScrappedProducts.length > 0) {
+        if (this.saveToFile && Object.keys(this.alreadyScrappedProducts).length > 0) {
             const preparedKeyword = this.keyword.replace(/\s/g, "_");
 
             if (this.fileType === CONSTANTS.supported_filetypes.csv) {
-                await writeDataToCsv(preparedKeyword, this.alreadyScrappedProducts);
+                await writeDataToCsv(preparedKeyword, Object.values(this.alreadyScrappedProducts));
             }
 
             if (this.fileType === CONSTANTS.supported_filetypes.xls) {
-                await writeDataToXls(preparedKeyword, this.alreadyScrappedProducts);
+                await writeDataToXls(preparedKeyword, Object.values(this.alreadyScrappedProducts));
             }
         }
     }
@@ -125,7 +127,7 @@ class ProductsScraper {
     async getCurrentPageData() {
         const queryParams = querystring.encode({
             k: this.keyword,
-            page: this.currentSearchPage
+            ...(this.currentSearchPage > 1 ? { page: this.currentSearchPage, ref: `sr_pg_${this.currentSearchPage}` } : {})
         });
 
         for (let i = 0; i < CONSTANTS.limit.retry; i++) {
@@ -135,13 +137,13 @@ class ProductsScraper {
                 country: this.country
             });
 
-            const products = Object.values(this.getProducts(pageBody));
-            if (products.length > 0) {
+            const products = this.getProducts(pageBody);
+            if (Object.keys(products).length > 0) {
                 return products;
             }
         }
 
-        return [];
+        return {};
     }
 
     getProducts(body) {
@@ -150,7 +152,7 @@ class ProductsScraper {
         const scrapingResult = {};
 
         for (let i = 0; i < productList.length; i++) {
-            const totalInResult = Object.keys(scrapingResult).length + this.alreadyScrappedProducts.length;
+            const totalInResult = Object.keys(scrapingResult).length + Object.keys(this.alreadyScrappedProducts).length;
             if (totalInResult >= this.numberOfProducts) {
                 break;
             }
@@ -161,12 +163,13 @@ class ProductsScraper {
                 'amazon-id': productList[i].attribs['data-asin'],
                 'title': "",
                 'thumbnail': "",
+                'high-res-image': "",
                 'url': "",
                 'is-discounted': false,
                 'is-sponsored': false,
                 'is-amazon-choice': false,
                 'price': "",
-                'beforeDiscount': "",
+                'before-discount': "",
                 'reviews-count': 0,
                 'rating': 0,
                 'score': 0,
@@ -192,12 +195,12 @@ class ProductsScraper {
                 }
 
                 if (discountSearch) {
-                    scrapingResult[key].beforeDiscount = dom(discountSearch.children[0]).text().replace(/[^D+0-9.,]/g, '');
+                    scrapingResult[key]['before-discount'] = dom(discountSearch.children[0]).text().replace(/[^D+0-9.,]/g, '');
                     scrapingResult[key]['is-discounted'] = true;
-                    let savings = scrapingResult[key].beforeDiscount - scrapingResult[key].price;
+                    let savings = scrapingResult[key]['before-discount'] - scrapingResult[key].price;
                     if (savings <= 0) {
                         scrapingResult[key]['is-discounted'] = false;
-                        scrapingResult[key].beforeDiscount = 0;
+                        scrapingResult[key]['before-discount'] = 0;
                     } else {
                         scrapingResult[key].savings = savings;
                     }
@@ -212,9 +215,10 @@ class ProductsScraper {
                 if (titleThumbnailSearch) {
                     scrapingResult[key].title = titleThumbnailSearch.attribs.alt;
                     scrapingResult[key].thumbnail = titleThumbnailSearch.attribs.src;
+                    scrapingResult[key]['high-res-image'] = scrapingResult[key].thumbnail.split("._")[0] + ".jpg"
                 }
 
-                if (urlSearch && Array.isArray(urlSearch)) {
+                if (urlSearch) {
                     let url = urlSearch[0].attribs.href;
                     if (url.indexOf('/gcx/-/') > -1) {
                         url = urlSearch[1].attribs.href;
@@ -232,6 +236,43 @@ class ProductsScraper {
         }
 
         return scrapingResult;
+    }
+
+    /**
+     *
+     * @param amazonId - also called asin, unique Amazon product ID
+     * @returns {Promise<void>}
+     *
+     * The main idea of this method is pretty simple - amend existing products object with additional data
+     */
+    async getProductPageData(amazonId) {
+        for (let i = 0; i < CONSTANTS.limit.retry; i++) {
+            try {
+                const pageBody = await makeRequest({
+                    url: `${this.host}/dp/${amazonId}`,
+                    rapidApiKey: this.apiKey,
+                    country: this.country
+                });
+
+                const dom = cheerio.load(pageBody.replace(/\s\s+/g, '').replace(/\n/g, ''));
+
+                const shortDescription = dom(`#featurebullets_feature_div`).text();
+                const fullDescription = dom(`#productDescription`).text();
+
+                this.alreadyScrappedProducts[amazonId]['short-description'] = shortDescription;
+                this.alreadyScrappedProducts[amazonId]['full-description'] = fullDescription;
+
+                if (shortDescription || fullDescription) {
+                    if (this.progressBar) {
+                        this.progressBar.increment()
+                    }
+                    return; //No need to retry.
+                }
+
+            } catch (exception) {
+                // Hiding the exception for retry
+            }
+        }
     }
 }
 
