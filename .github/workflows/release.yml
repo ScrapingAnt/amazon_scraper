@@ -41,6 +41,7 @@ jobs:
 
   deploy:
     name: Publish to NPM
+    needs: [build_and_test]
     runs-on: ubuntu-latest
     steps:
       -
