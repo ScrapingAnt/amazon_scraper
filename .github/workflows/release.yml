@@ -41,7 +41,6 @@ jobs:
 
   deploy:
     name: Publish to NPM
-    needs: [lint]
     runs-on: ubuntu-latest
     steps:
       -
