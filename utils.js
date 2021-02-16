@@ -1,27 +1,8 @@
 'use strict';
 
-const got = require('got');
 const fs = require('fs').promises;
 const Json2csvParser = require('json2csv').Parser;
 const json2xls = require('json2xls');
-
-exports.makeRequest = async ({ url, rapidApiKey, country }) => {
-    const request = await got.post('https://scrapingant.p.rapidapi.com/post', {
-        retry: 5,
-        headers: {
-            "x-rapidapi-host": "scrapingant.p.rapidapi.com",
-            "x-rapidapi-key": rapidApiKey,
-            "content-type": "application/json",
-            "accept": "application/json"
-        },
-        json: {
-            url: url,
-            proxy_country: country
-        }
-    });
-
-    return request.body;
-}
 
 exports.writeDataToCsv = async (keyword, productsList) => {
     const productsParser = new Json2csvParser({

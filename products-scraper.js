@@ -1,11 +1,11 @@
 'use strict';
 
 const cheerio = require('cheerio');
-const makeRequest = require('./utils').makeRequest;
 const writeDataToCsv = require('./utils').writeDataToCsv;
 const writeDataToXls = require('./utils').writeDataToXls;
 const cliProgress = require('cli-progress');
 const querystring = require('querystring');
+const ScrapingAntClient = require('@scrapingant/scrapingant-client')
 
 const CONSTANTS = require('./constants');
 
@@ -26,6 +26,7 @@ class ProductsScraper {
             format: `Amazon Scraping: ${this.keyword} | {bar} | {percentage}% - {value}/{total} Products || ETA: {eta}s`,
         }, cliProgress.Presets.shades_classic) : null;
         this.productsPromises = [];
+        this.client = new ScrapingAntClient({ apiKey });
     }
 
     async startScraping() {
@@ -82,7 +83,7 @@ class ProductsScraper {
 
     checkForApiKey() {
         if (!this.apiKey) {
-            throw `No RapidAPI apiKey. Please refer to https://rapidapi.com/okami4kak/api/scrapingant for getting yours.`;
+            throw `No ScrapingAnt apiKey. Please refer to https://scrapingant.com for getting yours.`;
         }
     }
 
@@ -131,12 +132,11 @@ class ProductsScraper {
         });
 
         for (let i = 0; i < CONSTANTS.limit.retry; i++) {
-            const pageBody = await makeRequest({
-                url: `${this.host}/s?${queryParams}`,
-                rapidApiKey: this.apiKey,
-                country: this.country
-            });
-
+            const response = await this.client.scrape(
+                `${this.host}/s?${queryParams}`,
+                { proxy_country: this.country }
+                );
+            const pageBody = response.content;
             const products = this.getProducts(pageBody);
             if (Object.keys(products).length > 0) {
                 return products;
@@ -248,11 +248,11 @@ class ProductsScraper {
     async getProductPageData(amazonId) {
         for (let i = 0; i < CONSTANTS.limit.retry; i++) {
             try {
-                const pageBody = await makeRequest({
-                    url: `${this.host}/dp/${amazonId}`,
-                    rapidApiKey: this.apiKey,
-                    country: this.country
-                });
+                const response = await this.client.scrape(
+                    `${this.host}/dp/${amazonId}`,
+                    { proxy_country: this.country }
+                    );
+                const pageBody = response.content;
 
                 const dom = cheerio.load(pageBody.replace(/\s\s+/g, '').replace(/\n/g, ''));
 

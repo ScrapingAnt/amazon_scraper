@@ -13,9 +13,9 @@ const startScraper = async argv => {
 
 require('yargs')
     .usage('Usage: $0 [options]')
-    .example(`$0 -s 'baking mat' -k 'rapid_api_key'`)
-    .example(`$0 -s 'baking mat' -H 'www.amazon.de' -k 'rapid_api_key'`)
-    .example(`$0 -s 'baking mat' -c 'us' -H 'www.amazon.de' -k 'rapid_api_key'`)
+    .example(`$0 -s 'baking mat' -k 'ScrapingAnt API key'`)
+    .example(`$0 -s 'baking mat' -H 'www.amazon.de' -k 'ScrapingAnt API key'`)
+    .example(`$0 -s 'baking mat' -c 'us' -H 'www.amazon.de' -k 'ScrapingAnt API key'`)
     .command('$0', 'Scrapes for a products with rotating proxies from the provided key word', {}, argv => {
         startScraper(argv);
     })
@@ -34,7 +34,7 @@ require('yargs')
             alias: 'a',
             default: '',
             type: 'string',
-            describe: 'RapidAPI key for ScrapingAnt API'
+            describe: 'ScrapingAnt API key'
         },
         number: {
             alias: 'n',
@@ -68,7 +68,7 @@ require('yargs')
     })
     .check(argv => {
         if (!argv.apiKey) {
-            throw 'ScrapingAnt RapidAPI key is missing';
+            throw 'ScrapingAnt API key is missing';
         }
         if (!argv.keyword) {
             throw 'Search keyword is missing';

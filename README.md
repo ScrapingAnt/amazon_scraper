@@ -21,7 +21,7 @@ $ npm i -g @scrapingant/amazon-proxy-scraper
 
 This library depends on rotating proxies scraping API - ScrapingAnt. It has a free plan.
 
-To use this code you need RapidApi key. Just go to <a href="https://rapidapi.com/okami4kak/api/scrapingant">ScrapingAnt page on RapidAPI</a>, and click "Subscribe to Test" button. After that you have to select plan(there is a free one with 500 requests included). After that you can find you api key in "X-RapidAPI-Key" field on <a href="https://rapidapi.com/okami4kak/api/scrapingant/endpoints">endpoints</a> page.
+To use this code you need ScrapingAnt API key. Just go to <a href="https://scrapingant.com">ScrapingAnt</a>, and Sign In (by clicking `TRY NOW` button). After that you can find your API key at "Your API token" card at the <a href="https://app.scrapingant.com/dashboard">dashboard</a> page.
 
 ## USAGE
 
@@ -36,7 +36,7 @@ Options:
   --help, -h      help                                                 [boolean]
   --version       Show version number                                  [boolean]
   --keyword, -k   Amazon search keyword ex. 'baking mat'  [string] [default: ""]
-  --apiKey, -a    RapidAPI key for ScrapingAnt API        [string] [default: ""]
+  --apiKey, -a    ScrapingAnt API key                     [string] [default: ""]
   --number, -n    Number of products to scrape. Maximum 500 products
                                                           [number] [default: 10]
   --save, -s      Save to a file?                      [boolean] [default: true]
@@ -177,7 +177,7 @@ const options = {
 
     host: "amazon.fr", //Optional. amazon.com by default.
 
-    apiKey: "<apiKey>", //Required parameter. ApiKey for ScrapingAnt API
+    apiKey: "<apiKey>", //Required parameter. API key for ScrapingAnt API
 
     save: true, //Optional. Defines saving result to CSV. False by default.
 
