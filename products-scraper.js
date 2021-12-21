@@ -5,7 +5,9 @@ const writeDataToCsv = require('./utils').writeDataToCsv;
 const writeDataToXls = require('./utils').writeDataToXls;
 const cliProgress = require('cli-progress');
 const querystring = require('querystring');
+const retry = require('promise-retry');
 const ScrapingAntClient = require('@scrapingant/scrapingant-client')
+
 
 const CONSTANTS = require('./constants');
 
@@ -131,15 +133,22 @@ class ProductsScraper {
             ...(this.currentSearchPage > 1 ? { page: this.currentSearchPage, ref: `sr_pg_${this.currentSearchPage}` } : {})
         });
 
+        // Retry for avoiding empty or detected result from Amazon
         for (let i = 0; i < CONSTANTS.limit.retry; i++) {
-            const response = await this.client.scrape(
-                `${this.host}/s?${queryParams}`,
-                { proxy_country: this.country }
-                );
-            const pageBody = response.content;
-            const products = this.getProducts(pageBody);
-            if (Object.keys(products).length > 0) {
-                return products;
+            try {
+                // Retry for any network or accessibility cases
+                const response = await retry((attempt) => this.client.scrape(
+                    `${this.host}/s?${queryParams}`,
+                    { proxy_country: this.country }
+                ).catch(attempt), { retries: CONSTANTS.limit.retry });
+
+                const pageBody = response.content;
+                const products = this.getProducts(pageBody);
+                if (Object.keys(products).length > 0) {
+                    return products;
+                }
+            } catch (err) {
+                console.error(`Failed to get page ${this.currentSearchPage} for keyword ${this.keyword}. Going to retry...`);
             }
         }
 
@@ -246,12 +255,14 @@ class ProductsScraper {
      * The main idea of this method is pretty simple - amend existing products object with additional data
      */
     async getProductPageData(amazonId) {
+        // Retry for avoiding empty or detected result from Amazon
         for (let i = 0; i < CONSTANTS.limit.retry; i++) {
             try {
-                const response = await this.client.scrape(
+                // Retry for any network or accessibility cases
+                const response = await retry((attempt) => this.client.scrape(
                     `${this.host}/dp/${amazonId}`,
                     { proxy_country: this.country }
-                    );
+                    ).catch(attempt), { retries: CONSTANTS.limit.retry });
                 const pageBody = response.content;
 
                 const dom = cheerio.load(pageBody.replace(/\s\s+/g, '').replace(/\n/g, ''));
@@ -270,7 +281,7 @@ class ProductsScraper {
                 }
 
             } catch (exception) {
-                // Hiding the exception for retry
+                console.error(`Failed to get product ${amazonId} for keyword ${this.keyword}. Going to retry...`);
             }
         }
     }
