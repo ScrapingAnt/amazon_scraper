@@ -1,6 +1,6 @@
 {
   "name": "@scrapingant/amazon-proxy-scraper",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Amazon products scraper by keyword with using ScrapingAnt API",
   "main": "index.js",
   "bin": {
@@ -22,6 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "@scrapingant/scrapingant-client": "0.1.0",
+    "cheerio": "^1.0.0-rc.11",
     "cli-progress": "^3.9.0",
     "json2csv": "^5.0.6",
     "json2xls": "^0.1.2",
