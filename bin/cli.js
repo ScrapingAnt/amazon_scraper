@@ -61,9 +61,9 @@ require('yargs')
         },
         country: {
             alias: 'c',
-            default: 'us',
+            default: '',
             type: 'string',
-            describe: 'Country of proxies location'
+            describe: 'Country of proxies location (default: all possible countries)'
         }
     })
     .check(argv => {

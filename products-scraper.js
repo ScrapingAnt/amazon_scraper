@@ -23,7 +23,7 @@ class ProductsScraper {
         this.numberOfProducts = parseInt(number) || CONSTANTS.defaultItemLimit;
         this.currentSearchPage = 1;
         this.saveToFile = save || false;
-        this.country = country || 'us';
+        this.country = country;
         this.progressBar = showProgress ? new cliProgress.SingleBar({
             format: `Amazon Scraping: ${this.keyword} | {bar} | {percentage}% - {value}/{total} Products || ETA: {eta}s`,
         }, cliProgress.Presets.shades_classic) : null;
@@ -76,10 +76,12 @@ class ProductsScraper {
     }
 
     checkForCountry() {
-        this.country = this.country.toLowerCase();
+        if (this.country) {
+            this.country = this.country.toLowerCase();
 
-        if (!CONSTANTS.supported_countries.includes(this.country)) {
-            throw `Not supported country. Please use one from the following: ${CONSTANTS.supported_countries.join(", ")}`;
+            if (!CONSTANTS.supported_countries.includes(this.country)) {
+                throw `Not supported country. Please use one from the following: ${CONSTANTS.supported_countries.join(", ")}`;
+            }
         }
     }
 
@@ -137,9 +139,10 @@ class ProductsScraper {
         for (let i = 0; i < CONSTANTS.limit.retry; i++) {
             try {
                 // Retry for any network or accessibility cases
+                const params = this.country ? { proxy_country: this.country } : {};
                 const response = await retry((attempt) => this.client.scrape(
                     `${this.host}/s?${queryParams}`,
-                    { proxy_country: this.country }
+                    params
                 ).catch(attempt), { retries: CONSTANTS.limit.retry });
 
                 const pageBody = response.content;
